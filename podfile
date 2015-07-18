@@ -1,0 +1,4 @@
+pod "Parse"
+pod 'MBProgressHUD', '~> 0.9.1'
+pod "FBSDKCoreKit"
+pod 'ParseFacebookUtilsV4'
