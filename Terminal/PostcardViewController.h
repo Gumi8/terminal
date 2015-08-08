@@ -8,8 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+
 @interface PostcardViewController : UIViewController
 
-@property (weak, nonatomic) IBOutlet UILabel *countDownLabel;
 
 @end

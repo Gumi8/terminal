@@ -13,6 +13,7 @@
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
 #import <ParseFacebookUtilsV4/PFFacebookUtils.h>
+#import <Analytics.h>
 
 
 
@@ -31,6 +32,8 @@
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     
     [Fabric with:@[CrashlyticsKit]];
+    
+    [SEGAnalytics setupWithConfiguration:[SEGAnalyticsConfiguration configurationWithWriteKey:@"lebCydwA6Py7ygPcQyE0V5W0eRMBepJT"]];
 
     return YES;
 }

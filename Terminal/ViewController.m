@@ -12,7 +12,7 @@
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
 #import <ParseFacebookUtilsV4/PFFacebookUtils.h>
-
+#import <Analytics.h>
 
 
 @interface ViewController ()
@@ -30,20 +30,15 @@
     self.signUpButton.clipsToBounds = YES;
     self.signUpButton.layer.cornerRadius = 5;
     [self.navigationController setNavigationBarHidden:YES];
-    NSLog(@"%@", [PFUser currentUser]);
     if ([PFUser currentUser]) {
         [self performSegueWithIdentifier:@"enterApp" sender:self];
     }
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self.navigationController setNavigationBarHidden:YES];
-}
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 - (IBAction)loginFBButtonPressed:(id)sender {
@@ -55,19 +50,18 @@
             [self enterApp];
         } else {
             NSLog(@"User logged in through Facebook!");
+            PFUser *user = [PFUser currentUser];
+            [[SEGAnalytics sharedAnalytics] identify:user.objectId traits:nil];
             [self enterApp];
         }
    }];
 }
 
-
 -(void) enterApp {
     [self performSegueWithIdentifier:@"enterApp" sender:self];
 }
 
-- (void)logOut  {
-    [PFUser logOut]; // Log out
-}
+
 
 
 

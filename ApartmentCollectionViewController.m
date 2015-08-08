@@ -8,9 +8,16 @@
 
 #import "ApartmentCollectionViewController.h"
 #import "PhotoCollectionViewCell.h"
+#import "TableViewController.h"
+#import <Parse/Parse.h>
 
-@interface ApartmentCollectionViewController () <UICollectionViewDataSource, UICollectionViewDelegate>
-@property (strong, nonatomic) IBOutlet UICollectionView *collectionView;
+
+
+@interface ApartmentCollectionViewController ()
+
+@property (nonatomic) NSMutableArray *images;
+@property (nonatomic) NSMutableArray *prices;
+@property (nonatomic) NSMutableArray *urls;
 
 @end
 
@@ -20,46 +27,82 @@ static NSString * const reuseIdentifier = @"Cell";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.images = [NSMutableArray new];
+    self.prices = [NSMutableArray new];
+    PFQuery *query = [PFQuery queryWithClassName:@"Apartment"];
+    [query whereKey:@"postcard" equalTo:self.postcard];
     
-    self.collectionView.dataSource = self;
-    self.collectionView.delegate = self;
-    
-    // Uncomment the following line to preserve selection between presentations
-    // self.clearsSelectionOnViewWillAppear = NO;
-    
-    // Register cell classes
-    [self.collectionView registerClass:[PhotoCollectionViewCell class] forCellWithReuseIdentifier:@"Cell"];
-    
-    // Do any additional setup after loading the view.
+    [query findObjectsInBackgroundWithBlock:^(NSArray *apartments, NSError *error) {
+        if (!error) {
+            for (PFObject *apartment in apartments) {
+                [self.images addObject:apartment[@"image"]];
+                [self.prices addObject:apartment[@"price"]];
+                [self.urls addObject:apartment[@"url"]];
+            }
+            [self.collectionView reloadData];
+        }
+    }];
 }
 
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)viewWillAppear:(BOOL)animated {
+ [self.navigationController setNavigationBarHidden:NO];
+    
+    
 }
-
 
 #pragma mark UICollectionView methods
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
-
     return 1;
 }
 
-
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-
-    return 10;
+    if (self.images) {
+        return 1 + [self.images count];
+    } else {
+        return 1;
+    }
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    PhotoCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier: @"Cell"forIndexPath:indexPath];
-    cell.imageView.image =
-    
+    PhotoCollectionViewCell *cell = (PhotoCollectionViewCell *)[collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    if (indexPath.row == 0) {
+        [self.postcard.image getDataInBackgroundWithBlock:^(NSData *data, NSError * error){
+            if (!error) {
+                cell.imageView.image = [UIImage imageWithData:data];
+                cell.titleLabel.text = self.postcard.placename;
+            }
+        }];
+    } else {
+        [self.images[indexPath.row-1] getDataInBackgroundWithBlock:^(NSData *data, NSError * error){
+            if (!error) {
+                cell.imageView.image = [UIImage imageWithData:data];
+                cell.titleLabel.text = self.prices[indexPath.row-1];
+            }
+        }];
+    }
     return cell;
-
 }
+
+
+- (IBAction)logoutButtonPressed:(id)sender {
+    [PFUser logOut];
+}
+
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *urlString = self.urls[indexPath.row];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
+}
+
+
+/*- (IBAction)logoutButtonPressed:(id)sender {
+    [PFUser logOutInBackgroundWithBlock:^(NSError *error) {
+        [self dismissViewControllerAnimated:YES completion:nil];
+ }];
+ 
+} */
+
 
 #pragma mark <UICollectionViewDelegate>
 
@@ -77,6 +120,8 @@ static NSString * const reuseIdentifier = @"Cell";
 }
 */
 
+
+
 /*
 // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
 - (BOOL)collectionView:(UICollectionView *)collectionView shouldShowMenuForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -91,5 +136,6 @@ static NSString * const reuseIdentifier = @"Cell";
 	
 }
 */
+
 
 @end

@@ -11,7 +11,6 @@
 @interface ForgotPasswordViewController : UIViewController
 
 
-@property (weak, nonatomic) IBOutlet UITextField *emailAddress;
 
 
 @end

@@ -7,9 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Parse/Parse.h>
+#import "PostcardViewController.h"
+#import "Postcard.h"
+#import "Apartment.h"
 
 @interface ApartmentCollectionViewController : UICollectionViewController
 
-
+@property (nonatomic) Postcard *postcard;
 
 @end

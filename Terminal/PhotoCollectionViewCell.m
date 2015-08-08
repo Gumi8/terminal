@@ -10,22 +10,10 @@
 
 @implementation PhotoCollectionViewCell
 
--(instancetype) initWithFrame:(CGRect)frame
-{
-    self = [super initWithFrame:frame];
-    
-    if (self) {
-        self.imageView = [UIImageView new];
-        [self.contentView addSubview:self.imageView];
-    }
-    return self;
-}
-
-
--(void) layoutSubviews
-{
-    [super layoutSubviews];
-    self.imageView.frame = self.contentView.bounds;
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    self.contentView.layer.cornerRadius = 10;
+    self.contentView.clipsToBounds = YES;
 }
 
 @end

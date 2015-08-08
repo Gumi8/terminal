@@ -10,6 +10,7 @@
 #import <Parse/Parse.h>
 #import "Postcard.h"
 #import "PostcardViewController.h"
+#import "ApartmentCollectionViewController.h"
 
 @interface TableViewController ()
 
@@ -22,60 +23,61 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.savedCards = [PFUser currentUser][@"savedCards"];
-    NSLog(@"%@", self.savedCards);
+    self.navigationItem.hidesBackButton = YES;
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [self.navigationController setNavigationBarHidden:NO];
+    [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:nil];
+    self.navigationController.navigationBar.translucent = NO;
+    self.navigationController.navigationBar.titleTextAttributes = @{ NSForegroundColorAttributeName: [UIColor blackColor], NSFontAttributeName: [UIFont systemFontOfSize:17] };
 }
 
 
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    UITextView *tv = object;
-    CGFloat topCorrect = ([tv bounds].size.height - [tv contentSize].height * [tv zoomScale])/2.0;
-    topCorrect = ( topCorrect < 0.0 ? 0.0 : topCorrect );
-    tv.contentOffset = (CGPoint){.x = 0, .y = -topCorrect};
-}
-
-
--(NSInteger) numberOfSectionsInTableView:(UITableView *)tableView {
+-(NSInteger) numberOfSectionsInTabxxleView:(UITableView *)tableView {
     return 1;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 75;
 }
 
 -(UITableViewCell *) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
 
-    cell.imageView.image = [UIImage imageNamed:@"The-Earth_1920x1080.jpg"];
+    cell.imageView.image = [self imageScaledToSize:[UIImage imageNamed:@"The-Earth_1920x1080.jpg"] size:CGSizeMake(95, 75)];
     cell.imageView.contentMode = UIViewContentModeScaleAspectFill;
-    cell.imageView.clipsToBounds = YES;
-    CGRect imageViewFrame = cell.imageView.frame;
-    imageViewFrame.size.width = CGRectGetHeight(imageViewFrame);
-    cell.imageView.frame = imageViewFrame;
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     Postcard *postcard = self.savedCards[indexPath.row];
     [postcard fetchIfNeededInBackgroundWithBlock:^(PFObject *postcardObject, NSError *error) {
         if (!error) {
             Postcard *fetchedPostcard = (Postcard *)postcardObject;
+            NSLog(@"%@", fetchedPostcard);
             cell.textLabel.text = fetchedPostcard.placename;
             [fetchedPostcard.image getDataInBackgroundWithBlock:^(NSData * data, NSError * error){
-                cell.imageView.image = [UIImage imageWithData:data];
-               // cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-                
+                cell.imageView.image = [self imageScaledToSize:[UIImage imageWithData:data] size:CGSizeMake(95, 75)];
             }];
         }
     }];
     return cell;
 }
 
+- (UIImage *)imageScaledToSize:(UIImage *)image size:(CGSize)newSize {
+    UIGraphicsBeginImageContextWithOptions(newSize, NO, 0);
+    [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 - (NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [self.savedCards count];
 }
 
-- (IBAction)logoutButtonPressed:(id)sender {
-    [PFUser logOutInBackgroundWithBlock:^(NSError *error) {
-        [self dismissViewControllerAnimated:YES completion:nil];
-    }];
-}
-
 -( void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    NSString *cellText = cell.textLabel.text;
+  //  NSString *cellText = cell.textLabel.text;
     Postcard *card = self.savedCards[indexPath.row];
     [self.delegate didSelectCard:card];
     [self performSegueWithIdentifier:@"gotoApartment" sender:nil];
@@ -83,37 +85,14 @@
 }
 
 
-/*- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MyIdentifier"];
-    if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"MyIdentifier"];
-        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+-(void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([[segue identifier] isEqualToString:@"gotoApartment"]) {
+        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
+        ApartmentCollectionViewController *vc = [segue destinationViewController];
+        vc.postcard = self.savedCards[indexPath.row];
     }
-    
-    - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-        static NSString *CellIdentifier = @"Cell";
-        
-        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-        if (cell == nil) {
-            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
-        }
-        
-        [[cell imageView] setImage:anImage];
-        [[cell textLabel] setText:[NSString stringWithFormat:@"%d",[indexPath row]];
-         
-         return cell;
-         }
+}
 
-    
-    
-    NSDictionary *item = (NSDictionary *)[self.content objectAtIndex:indexPath.row];
-    cell.textLabel.text = [item objectForKey:@"mainTitleKey"];
-    cell.detailTextLabel.text = [item objectForKey:@"secondaryTitleKey"];
-    NSString *path = [[NSBundle mainBundle] pathForResource:[item objectForKey:@"imageKey"] ofType:@"png"];
-    UIImage *theImage = [UIImage imageWithContentsOfFile:path];
-    cell.imageView.image = theImage;
-    return cell;
-} */
 
 
 @end
